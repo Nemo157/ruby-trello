@@ -1,7 +1,7 @@
 module Trello
   class Notification < BasicData
     register_attributes :id, :unread, :type, :date, :data, :member_creator_id,
-      :read_only => [ :id, :unread, :type, :date, :member_creator_id ]
+      :read_only => [ :id, :type, :date, :member_creator_id ]
     validates_presence_of :id, :type, :date, :member_creator_id
 
     class << self
@@ -11,13 +11,29 @@ module Trello
       end
     end
 
+    def save
+      return update! if id
+      fail "Cannot save new instance."
+    end
+
+    def update!
+      fail "Cannot save new instance." unless self.id
+
+      @previously_changed = changes
+      @changed_attributes.clear
+
+      client.put("/notifications/#{self.id}", {
+        :unread => attributes[:unread]
+      }).json_into(self)
+    end
+
     def update_fields(fields)
-      attributes[:id]                = fields['id']
-      attributes[:unread]            = fields['unread']
-      attributes[:type]              = fields['type']
-      attributes[:date]              = fields['date']
-      attributes[:data]              = fields['data']
-      attributes[:member_creator_id] = fields['idMemberCreator']
+      attributes[:id]                = fields['id'] if fields.has_key?('id')
+      attributes[:unread]            = fields['unread'] || false
+      attributes[:type]              = fields['type'] if fields.has_key?('type')
+      attributes[:date]              = fields['date'] if fields.has_key?('date')
+      attributes[:data]              = fields['data'] if fields.has_key?('data')
+      attributes[:member_creator_id] = fields['idMemberCreator'] if fields.has_key?('idMemberCreator')
       self
     end
 
@@ -43,6 +59,11 @@ module Trello
 
     def organization
       client.get("/notifications/#{id}/organization").json_into(Organization)
+    end
+
+    def read!
+      unread = false
+      update!
     end
   end
 end
