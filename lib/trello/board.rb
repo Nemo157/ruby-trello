@@ -1,6 +1,6 @@
 module Trello
   class Board < BasicData
-    register_attributes :id, :name, :description, :closed, :url, :organization_id, :prefs,
+    register_attributes :id, :name, :description, :closed, :url, :organization_id, :prefs, :subscribed,
       :readonly => [ :id, :url, :organization_id, :prefs ]
     validates_presence_of :id, :name
     validates_length_of   :name,        :in      => 1..16384
@@ -34,6 +34,7 @@ module Trello
       fields.merge!(:idOrganization => organization_id) if organization_id
 
       client.post("/boards", fields).json_into(self)
+      subscribe! if subscribed?
     end
 
     def update!
@@ -45,7 +46,8 @@ module Trello
       client.put("/boards/#{self.id}/", {
         :name        => attributes[:name],
         :description => attributes[:description],
-        :closed      => attributes[:closed]
+        :closed      => attributes[:closed],
+        :subscribed  => attributes[:subscribed]
       }).json_into(self)
     end
 
@@ -57,6 +59,7 @@ module Trello
       attributes[:url]             = fields['url']             if fields['url']
       attributes[:organization_id] = fields['idOrganization']  if fields['idOrganization']
       attributes[:prefs]           = fields['prefs'] || {}
+      attributes[:subscribed]      = fields['subscribed']      if fields.has_key?['subscribed']
       self
     end
 
@@ -70,6 +73,16 @@ module Trello
 
     def find_card(card_id)
       client.get("/boards/#{self.id}/cards/#{card_id}").json_into(Card)
+    end
+
+    alias :subscribed? :subscribed
+
+    def subscribe!
+      client.put("/boards/#{self.id}/subscribed", { :value => true }).json_into(self) if not subscribed?
+    end
+
+    def unsubscribe!
+      client.put("/boards/#{self.id}/subscribed", { :value => false }).json_into(self) if subscribed?
     end
 
     # Return all the cards on this board.
