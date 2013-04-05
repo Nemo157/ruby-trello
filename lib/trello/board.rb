@@ -59,7 +59,7 @@ module Trello
       attributes[:url]             = fields['url']             if fields['url']
       attributes[:organization_id] = fields['idOrganization']  if fields['idOrganization']
       attributes[:prefs]           = fields['prefs'] || {}
-      attributes[:subscribed]      = fields['subscribed']      if fields.has_key?['subscribed']
+      attributes[:subscribed]      = fields['subscribed']      if fields.has_key?('subscribed')
       self
     end
 
