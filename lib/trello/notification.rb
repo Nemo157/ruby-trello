@@ -42,23 +42,33 @@ module Trello
     one :member_creator, :path => :members, :via => Member, :using => :member_creator_id
 
     def board
-      client.get("/notifications/#{id}/board").json_into(Board)
+      client.get("/notifications/#{id}/board").json_into(Board).tap do |board|
+        board.client = client
+      end
     end
 
     def list
-      client.get("/notifications/#{id}/list").json_into(List)
+      client.get("/notifications/#{id}/list").json_into(List).tap do |list|
+        list.client = client
+      end
     end
 
     def card
-      client.get("/notifications/#{id}/card").json_into(Card)
+      client.get("/notifications/#{id}/card").json_into(Card).tap do |card|
+        card.client = client
+      end
     end
 
     def member
-      client.get("/notifications/#{id}/member").json_into(Member)
+      client.get("/notifications/#{id}/member").json_into(Member).tap do |member|
+        member.client = client
+      end
     end
 
     def organization
-      client.get("/notifications/#{id}/organization").json_into(Organization)
+      client.get("/notifications/#{id}/organization").json_into(Organization).tap do |org|
+        org.client = client
+      end
     end
 
     def read!
