@@ -72,8 +72,7 @@ module Trello
     end
 
     def read!
-      unread = false
-      update!
+      client.put("/notifications/#{id}/unread", { value: false })
     end
   end
 end
